@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const Sidebar: React.FC = () => {
+const Dashboard: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -19,4 +19,4 @@ const Sidebar: React.FC = () => {
   );
 };
 
-export default Sidebar;
+export default Dashboard;
