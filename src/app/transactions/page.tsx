@@ -82,7 +82,7 @@ const Transactions: React.FC = () => {
 
   return (
     //Main content
-    <div className="flex-1 flex-col md:ml-64 p-6 bg-gray-100 min-h-screen">
+    <div className="flex-1 flex-col p-6 bg-gray-100 min-h-screen">
       {/* <div className="flex items-start justify-left min-h-screen bg-gray-100"> */}
       <div className="flex items-center justify-between w-full mb-2">
         <h1 className="text-2xl font-semibold">All Transactions</h1>

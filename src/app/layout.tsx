@@ -3,8 +3,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { BadgeDollarSignIcon, ChartNoAxesCombinedIcon, GoalIcon, LayoutDashboardIcon, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import Sidebar from "@/components/sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,38 +33,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex text-black">
-          {/* Sidebar */}
-          <div
-            className={`text-white fixed top-0 left-0 h-full bg-gray-900 w-64 p-4 transform 
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        transition-transform duration-300 ease-in-out md:translate-x-0`}
-          >
-            <h2 className="text-2xl font-semibold mb-6">FinDash</h2>
-            <ul className="space-y-4">
-              <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
-                <LayoutDashboardIcon size={20} /> <a href="/">Dashboard</a>
-              </li>
-              <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
-                <BadgeDollarSignIcon size={20} /> <a href="/transactions">Transactions</a>
-              </li>
-              <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
-                <GoalIcon size={20} /> Budget Goals
-              </li>
-              <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
-                <ChartNoAxesCombinedIcon size={20} /> Analytics
-              </li>
-            </ul>
-          </div>
+        <div className="flex items-stretch text-black">
+          <Sidebar isOpen={isOpen} />
 
           {/* Hamburger Menu */}
-          <button
+          {/* <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden fixed top-4 left-4 z-50 text-gray-900"
           >
             {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-          {children}
+          </button> */}
+
+          <div className="flex-grow">{children}</div>
         </div>
       </body>
     </html>
