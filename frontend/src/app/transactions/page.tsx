@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,64 +21,43 @@ import {
 const Transactions: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const transactions = [
-    {
-      date: "Oct 15, 2025",
-      description: "Groceries",
-      category: "Food & Dining",
-      merchant: "Whole Foods",
-      totalAmount: "$250.00",
-      type: "Expense",
-    },
-    {
-      date: "Jan 7, 2025",
-      description: "Movie tickets",
-      category: "Entertainment",
-      merchant: "AMC Theatres",
-      totalAmount: "$150.00",
-      type: "Expense",
-    },
-    {
-      date: "Jan 6, 2025",
-      description: "New shoes",
-      category: "Shopping",
-      merchant: "Nike Store",
-      totalAmount: "$350.00",
-      type: "Expense",
-    },
-    {
-      date: "Jan 5, 2025",
-      description: "Coffee",
-      category: "Food & Dining",
-      merchant: "Starbucks",
-      totalAmount: "$450.00",
-      type: "Expense",
-    },
-    {
-      date: "Jan 4, 2025",
-      description: "Grocery",
-      category: "Food & Dining",
-      merchant: "Whole Foods",
-      totalAmount: "$550.00",
-      type: "Expense",
-    },
-    {
-      date: "Jan 2, 2025",
-      description: "Electric Bill",
-      category: "Bills & Utilities",
-      merchant: "Electric Company",
-      totalAmount: "$200.00",
-      type: "Expense",
-    },
-    {
-      date: "Dec 31, 2024",
-      description: "Monthly salary",
-      category: "Income",
-      merchant: "Employer",
-      totalAmount: "$3500.00",
-      type: "Income",
-    },
-  ]
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("http://localhost:8080/api/transactions");
+
+        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+
+        const data = await res.json();
+        // Accept both an array response or an object like { transactions: [...] }
+        const list = Array.isArray(data) ? data : data?.transactions ?? [];
+        setTransactions(list);
+      } catch (err: any) {
+        setError(err?.message ?? "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const parseAmount = (amt: any) => {
+    if (typeof amt === "number") return amt;
+    if (!amt) return 0;
+    const s = String(amt).replace(/[^0-9.-]+/g, "");
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const totalAmount = transactions.reduce((sum, t) => sum + parseAmount(t.totalAmount), 0);
+  const formattedTotal = totalAmount.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   return (
     //Main content
@@ -146,7 +125,7 @@ const Transactions: React.FC = () => {
               <TableCell>{transaction.category}</TableCell>
               <TableCell>{transaction.merchant}</TableCell>
               <TableCell>{transaction.type}</TableCell>
-              <TableCell className="text-right">{transaction.totalAmount}</TableCell>
+              <TableCell className="text-right">{transaction.amount}</TableCell>
             </TableRow>
           ))}
         </TableBody>
