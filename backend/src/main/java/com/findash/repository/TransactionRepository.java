@@ -15,6 +15,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByType(String type);
     
     // Find transactions by category
+    // Find transactions by category (case-insensitive)
+    @Query("SELECT t FROM Transaction t WHERE LOWER(t.category) = LOWER(?1)")
     List<Transaction> findByCategory(String category);
     
     // Find transactions by date range

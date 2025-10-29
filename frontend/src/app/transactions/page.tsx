@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import TransactionForm from "@/components/transactionform";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,26 +26,32 @@ const Transactions: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchTransactions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8080/api/transactions");
+
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+
+      const data = await res.json();
+      // Accept both an array response or an object like { transactions: [...] }
+      const list = Array.isArray(data) ? data : data?.transactions ?? [];
+      // Sort by date in descending order (most recent first)
+      const sortedList = list.sort((a: any, b: any) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+      setTransactions(sortedList);
+    } catch (err: any) {
+      setError(err?.message ?? "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("http://localhost:8080/api/transactions");
-
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-
-        const data = await res.json();
-        // Accept both an array response or an object like { transactions: [...] }
-        const list = Array.isArray(data) ? data : data?.transactions ?? [];
-        setTransactions(list);
-      } catch (err: any) {
-        setError(err?.message ?? "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, []);
 
@@ -65,9 +72,7 @@ const Transactions: React.FC = () => {
       {/* <div className="flex items-start justify-left min-h-screen bg-gray-100"> */}
       <div className="flex items-center justify-between w-full mb-2">
         <h1 className="text-2xl font-semibold">All Transactions</h1>
-        <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-          Add Transaction
-        </button>
+        <TransactionForm onSuccess={fetchTransactions} />
       </div>
       <p className="text-md text-gray-600 mb-6">
         Manage and categorize your financial activity
@@ -118,8 +123,8 @@ const Transactions: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow key={transaction.date}>
+          {transactions.map((transaction, index) => (
+            <TableRow key={index}>
               <TableCell className="font-medium">{transaction.date}</TableCell>
               <TableCell>{transaction.description}</TableCell>
               <TableCell>{transaction.category}</TableCell>

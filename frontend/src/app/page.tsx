@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import TransactionForm from "@/components/transactionform";
 
 const Dashboard: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -15,9 +16,7 @@ const Dashboard: React.FC = () => {
         Here's your financial overview for today.
       </p>
     </div>
-    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-      + Add Transaction
-    </button>
+    <TransactionForm />
   </div>
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-green-500 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-36">
