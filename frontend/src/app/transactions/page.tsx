@@ -82,25 +82,25 @@ const Transactions: React.FC = () => {
   // Filter transactions based on selected type, category, and search query
   const filteredTransactions = transactions.filter((transaction) => {
     // Filter by type
-    const typeMatch = 
+    const typeMatch =
       selectedType === "All Types" ||
       (selectedType === "Expenses" && transaction.type === "Expense") ||
       (selectedType === "Income" && transaction.type === "Income");
-    
+
     // Filter by category
-    const categoryMatch = 
+    const categoryMatch =
       selectedCategory === "All Categories" ||
       transaction.category === selectedCategory;
-    
+
     // Filter by search query (search across multiple fields)
-    const searchMatch = searchQuery.trim() === "" || 
+    const searchMatch = searchQuery.trim() === "" ||
       transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.merchant?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.date?.includes(searchQuery) ||
       transaction.amount?.toString().includes(searchQuery);
-    
+
     return typeMatch && categoryMatch && searchMatch;
   });
 
