@@ -17,7 +17,7 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
           <BadgeDollarSignIcon size={20} /> <a href="/transactions">Transactions</a>
         </li>
         <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
-          <GoalIcon size={20} /> Budget Goals
+          <GoalIcon size={20} /> <a href="/budgetgoals">Budget Goals</a>
         </li>
         <li className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
           <ChartNoAxesCombinedIcon size={20} /> <a href="/analytics">Analytics</a>

@@ -39,10 +39,7 @@ export default function BudgetGoals() {
       savingsGoal,
       targetDate,
       savingPurpose,
-      categoryBudgets: categoryBudgets.map((cb) => ({
-        ...cb,
-        limit: cb.limit === "" ? null : cb.limit,
-      })),
+      categoryBudgets: categoryBudgets
     };
     // For development: log budget data to console. Replace with user feedback in production.
     console.log("Budget updated:", budgetData);
