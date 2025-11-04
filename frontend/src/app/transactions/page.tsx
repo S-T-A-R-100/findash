@@ -39,6 +39,8 @@ const Transactions: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string>("All Types");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -77,12 +79,29 @@ const Transactions: React.FC = () => {
     return Number.isFinite(n) ? n : 0;
   };
 
-  // Filter transactions based on selected type
+  // Filter transactions based on selected type, category, and search query
   const filteredTransactions = transactions.filter((transaction) => {
-    if (selectedType === "All Types") return true;
-    if (selectedType === "Expenses") return transaction.type === "Expense";
-    if (selectedType === "Income") return transaction.type === "Income";
-    return true;
+    // Filter by type
+    const typeMatch = 
+      selectedType === "All Types" ||
+      (selectedType === "Expenses" && transaction.type === "Expense") ||
+      (selectedType === "Income" && transaction.type === "Income");
+    
+    // Filter by category
+    const categoryMatch = 
+      selectedCategory === "All Categories" ||
+      transaction.category === selectedCategory;
+    
+    // Filter by search query (search across multiple fields)
+    const searchMatch = searchQuery.trim() === "" || 
+      transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.merchant?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.date?.includes(searchQuery) ||
+      transaction.amount?.toString().includes(searchQuery);
+    
+    return typeMatch && categoryMatch && searchMatch;
   });
 
   const totalAmount = filteredTransactions.reduce((sum, t) => {
@@ -110,7 +129,9 @@ const Transactions: React.FC = () => {
       <div className="flex gap-2 items-center w-full">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search transactions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-grow px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
 
@@ -133,16 +154,33 @@ const Transactions: React.FC = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            Categories <ChevronDownIcon className="w-4 h-4" />
+            {selectedCategory} <ChevronDownIcon className="w-4 h-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>Shopping</DropdownMenuItem>
-            <DropdownMenuItem>Food & Dining</DropdownMenuItem>
-            <DropdownMenuItem>Entertainment</DropdownMenuItem>
-            <DropdownMenuItem>Transportation</DropdownMenuItem>
-            <DropdownMenuItem>Education</DropdownMenuItem>
-            <DropdownMenuItem>Healthcare</DropdownMenuItem>
-            <DropdownMenuItem>Bills & Utilities</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("All Categories")}>
+              All Categories
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Shopping")}>
+              Shopping
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Food & Dining")}>
+              Food & Dining
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Entertainment")}>
+              Entertainment
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Transportation")}>
+              Transportation
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Education")}>
+              Education
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Healthcare")}>
+              Healthcare
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedCategory("Bills & Utilities")}>
+              Bills & Utilities
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
