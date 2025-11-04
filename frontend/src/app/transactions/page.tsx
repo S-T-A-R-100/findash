@@ -19,12 +19,26 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+
+interface Transaction {
+  id?: number;
+  date: string;
+  description: string;
+  category: string;
+  merchant: string;
+  amount: number;
+  type: string;
+  paymentMethod: string;
+  notes: string;
+}
+
 const Transactions: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string>("All Types");
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -63,7 +77,23 @@ const Transactions: React.FC = () => {
     return Number.isFinite(n) ? n : 0;
   };
 
-  const totalAmount = transactions.reduce((sum, t) => sum + parseAmount(t.totalAmount), 0);
+  // Filter transactions based on selected type
+  const filteredTransactions = transactions.filter((transaction) => {
+    if (selectedType === "All Types") return true;
+    if (selectedType === "Expenses") return transaction.type === "Expense";
+    if (selectedType === "Income") return transaction.type === "Income";
+    return true;
+  });
+
+  const totalAmount = filteredTransactions.reduce((sum, t) => {
+    const amount = parseAmount(t.amount);
+    if (t.type === "Income") {
+      return sum + amount;
+    } else if (t.type === "Expense") {
+      return sum - amount;
+    }
+    return sum;
+  }, 0);
   const formattedTotal = totalAmount.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   return (
@@ -86,12 +116,18 @@ const Transactions: React.FC = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            Transaction Types <ChevronDownIcon className="w-4 h-4" />
+            {selectedType} <ChevronDownIcon className="w-4 h-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>All Types</DropdownMenuItem>
-            <DropdownMenuItem>Expenses</DropdownMenuItem>
-            <DropdownMenuItem>Income</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedType("All Types")}>
+              All Types
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedType("Expenses")}>
+              Expenses
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedType("Income")}>
+              Income
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -123,7 +159,7 @@ const Transactions: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction, index) => (
+          {filteredTransactions.map((transaction, index) => (
             <TableRow key={index}>
               <TableCell className="font-medium">{transaction.date}</TableCell>
               <TableCell>{transaction.description}</TableCell>
@@ -137,7 +173,7 @@ const Transactions: React.FC = () => {
         <TableFooter>
           <TableRow>
             <TableCell colSpan={5}>Total</TableCell>
-            <TableCell className="text-right">$1,550.00</TableCell>
+            <TableCell className="text-right">{formattedTotal}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
