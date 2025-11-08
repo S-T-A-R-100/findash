@@ -255,3 +255,49 @@ mvn -version
 ```
 
 If you run into permission issues on Windows, ensure your shell is running as Administrator when installing with Chocolatey.
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend (Next.js)
+    participant CTRL as TransactionController
+    participant SRV as TransactionService
+    participant REPO as TransactionRepository (Spring Data JPA)
+    participant DB as SQLite
+    participant DataSeeder as DataSeeder
+
+    %% Fetch recent transactions
+    FE->>CTRL: GET /api/transactions
+    CTRL->>SRV: getAllTransactions()
+    SRV->>REPO: findAllByOrderByDateDesc()
+    REPO->>DB: SQL SELECT ... ORDER BY date DESC
+    DB-->>REPO: rows
+    REPO-->>SRV: List<Transaction>
+    SRV-->>CTRL: List<Transaction> (maybe DTO)
+    CTRL-->>FE: 200 OK (JSON)
+
+    %% Create a transaction
+    FE->>CTRL: POST /api/transactions {payload}
+    CTRL->>SRV: createTransaction(payload)
+    SRV->>REPO: save(entity)
+    REPO->>DB: SQL INSERT ...
+    DB-->>REPO: generated id / row
+    REPO-->>SRV: saved entity
+    SRV-->>CTRL: saved entity
+    CTRL-->>FE: 201 Created (JSON)
+
+    %% Calculate totals (analytics)
+    FE->>CTRL: GET /api/transactions/total?type=Expense
+    CTRL->>SRV: getTotalByType("Expense")
+    SRV->>REPO: getTotalByType("Expense")
+    REPO->>DB: SELECT SUM(amount) FROM transactions WHERE type='Expense'
+    DB-->>REPO: sumValue
+    REPO-->>SRV: Double
+    SRV-->>CTRL: Double
+    CTRL-->>FE: 200 OK (JSON)
+
+    %% Application startup seeding
+    note over CTRL: Application startup
+    DataSeeder->>REPO: save(sampleTransactions...)
+    REPO->>DB: INSERT ...
+    DB-->>REPO: rows/ids
+```
