@@ -7,7 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowUpRightIcon, ChevronDownIcon } from "lucide-react";
+import { ArrowUpRightIcon, ChevronDownIcon, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -41,6 +50,8 @@ const Transactions: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>("All Types");
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -70,6 +81,36 @@ const Transactions: React.FC = () => {
   useEffect(() => {
     fetchTransactions();
   }, []);
+
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!transactionToDelete?.id) return;
+    
+    try {
+      const res = await fetch(`http://localhost:8080/api/transactions/${transactionToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error(`Failed to delete: ${res.status}`);
+
+      // Refresh the transactions list after successful deletion
+      await fetchTransactions();
+      setDeleteDialogOpen(false);
+      setTransactionToDelete(null);
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to delete transaction");
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setTransactionToDelete(null);
+  };
 
   const parseAmount = (amt: any) => {
     if (typeof amt === "number") return amt;
@@ -194,6 +235,7 @@ const Transactions: React.FC = () => {
             <TableHead>Merchant</TableHead>
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Amount</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -205,6 +247,15 @@ const Transactions: React.FC = () => {
               <TableCell>{transaction.merchant}</TableCell>
               <TableCell>{transaction.type}</TableCell>
               <TableCell className="text-right">{transaction.amount}</TableCell>
+              <TableCell>
+                <button
+                  onClick={() => handleDeleteClick(transaction)}
+                  className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                  aria-label="Delete transaction"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -215,6 +266,39 @@ const Transactions: React.FC = () => {
           </TableRow>
         </TableFooter>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this transaction? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {transactionToDelete && (
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">Description:</span> {transactionToDelete.description}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">Amount:</span> ${transactionToDelete.amount}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">Date:</span> {transactionToDelete.date}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleDeleteCancel}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* </div> */}
     </div>
   );
