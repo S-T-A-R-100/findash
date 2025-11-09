@@ -2,9 +2,24 @@
 
 import { useState, useEffect } from "react";
 import TransactionForm from "@/components/transactionform";
+import dayjs from "dayjs";
+
+interface Transaction {
+  id?: number;
+  date: string;
+  description: string;
+  category: string;
+  merchant: string;
+  amount: number;
+  type: string;
+  paymentMethod: string;
+  notes: string;
+}
 
 const Dashboard: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
+  const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
   const [transactions, setTransactions] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +46,30 @@ const Dashboard: React.FC = () => {
         })
         .slice(0, 5);
       setTransactions(sortedList);
+      
+      // Calculate monthly income from the past 30 days
+      const thirtyDaysAgo = dayjs().subtract(30, 'day');
+      const monthlyTransactions = list.filter((transaction: any) => {
+        const transactionDate = dayjs(transaction.date);
+        return transactionDate.isAfter(thirtyDaysAgo);
+      });
+      const monthlyIncomeTransactions = monthlyTransactions.filter((transaction: Transaction) => {
+        return transaction.type === "Income"
+      });
+      const monthlyExpenseTransactions = monthlyTransactions.filter((transaction: Transaction) => {
+        return transaction.type === "Expense"
+      });
+      
+      const totalMonthlyIncome = monthlyIncomeTransactions.reduce((sum: number, transaction: any) => {
+        return sum + (parseFloat(transaction.amount) || 0);
+      }, 0);
+      setMonthlyIncome(totalMonthlyIncome);
+
+      const totalMonthlyExpenses = monthlyExpenseTransactions.reduce((sum: number, transaction: any) => {
+        return sum + (parseFloat(transaction.amount) || 0);
+      }, 0);
+      setMonthlyExpenses(totalMonthlyExpenses);
+
     } catch (err: any) {
       setError(err?.message ?? "Unknown error");
     } finally {
@@ -58,14 +97,14 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-green-500 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-36">
           <div>
             <p className="text-sm font-medium text-gray-500">Monthly Income</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">$3,500</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">${monthlyIncome.toFixed(2)}</p>
           </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-red-500 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-36">
           <div>
-            <p className="text-sm font-medium text-gray-500">Total Expenses</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">$60</p>
+            <p className="text-sm font-medium text-gray-500">Monthly Expenses</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{monthlyExpenses.toFixed(2)}</p>
           </div>
         </div>
 
@@ -89,51 +128,22 @@ const Dashboard: React.FC = () => {
       <div className="mt-10 bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h2>
         <div className="divide-y divide-gray-200">
-          {transactions.map((transaction: any, index: number) => (
-            <div key={index} className="flex items-center justify-between py-4">
-              <div>
-                <p className="text-gray-900 font-medium">{transaction.category}</p>
-                <p className="text-sm text-gray-500">Oct 26 • Food & Dining</p>
+          {transactions.map((transaction: any, index: number) => {
+            const formattedDate = dayjs(transaction.date).format('MMM DD');
+
+            return (
+              <div key={index} className="flex items-center justify-between py-4">
+                <div>
+                  <p className="text-gray-900 font-medium">{transaction.category}</p>
+                  <p className="text-sm text-gray-500">{formattedDate} • {transaction.category}</p>
+                </div>
+                {transaction.type == "Expense" ?
+                  <p className="text-red-500 font-semibold">- {transaction.amount}</p> :
+                  <p className="text-green-500 font-semibold">{transaction.amount}</p>
+                }
               </div>
-              {transaction.type == "Expense" ?
-              <p className="text-red-500 font-semibold">- {transaction.amount}</p> :
-              <p className="text-green-500 font-semibold">{transaction.amount}</p>
-              }
-            </div>
-          ))}
-
-
-          {/* <div className="flex items-center justify-between py-4">
-          <div>
-            <p className="text-gray-900 font-medium">Movie tickets</p>
-            <p className="text-sm text-gray-500">Jan 7 • Entertainment</p>
-          </div>
-          <p className="text-red-500 font-semibold">- $25</p>
-        </div>
-
-        <div className="flex items-center justify-between py-4">
-          <div>
-            <p className="text-gray-900 font-medium">New shoes</p>
-            <p className="text-sm text-gray-500">Jan 6 • Shopping</p>
-          </div>
-          <p className="text-red-500 font-semibold">- $89.99</p>
-        </div>
-
-        <div className="flex items-center justify-between py-4">
-          <div>
-            <p className="text-gray-900 font-medium">Coffee</p>
-            <p className="text-sm text-gray-500">Jan 5 • Food & Dining</p>
-          </div>
-          <p className="text-red-500 font-semibold">- $12</p>
-        </div>
-
-        <div className="flex items-center justify-between py-4">
-          <div>
-            <p className="text-gray-900 font-medium">Grocery shopping</p>
-            <p className="text-sm text-gray-500">Jan 4 • Food & Dining</p>
-          </div>
-          <p className="text-red-500 font-semibold">- $45.50</p>
-        </div> */}
+            );
+          })}
 
         </div>
       </div>
