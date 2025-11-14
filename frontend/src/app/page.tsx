@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
       
       // Calculate monthly income from the past 30 days
       const thirtyDaysAgo = dayjs().subtract(30, 'day');
-      const monthlyTransactions = list.filter((transaction: any) => {
+      const monthlyTransactions: Transaction[] = list.filter((transaction: any) => {
         const transactionDate = dayjs(transaction.date);
         return transactionDate.isAfter(thirtyDaysAgo);
       });

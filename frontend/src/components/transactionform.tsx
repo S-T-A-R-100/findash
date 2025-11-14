@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dayjs from "dayjs";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ interface Transaction {
   description: string;
   category: string;
   merchant: string;
-  amount: number;
+  amount: number | null;
   type: string;
   paymentMethod: string;
   notes: string;
@@ -44,14 +45,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   transaction,
   onSuccess,
 }) => {
+  const [isFormValid, setIsFormValid] = useState(false);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Transaction>({
-    date: new Date().toISOString().split("T")[0],
+    date: dayjs().format("YYYY-MM-DD"),
     description: "",
     category: "",
     merchant: "",
-    amount: 0,
+    amount: null,
     type: "Expense",
     paymentMethod: "Cash",
     notes: "",
@@ -67,9 +69,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    if (name === "amount") {
+      // Preserve empty input (user cleared field) as null so the input can be blank.
+      const num = value === "" ? null : parseFloat(value);
+      const valid = num !== null && !isNaN(num) && num > 0;
+      setIsFormValid(valid);
+      setFormData((prev) => ({
+        ...prev,
+        amount: num,
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "amount" ? parseFloat(value) || 0 : value,
+      [name]: value
     }));
   };
 
@@ -106,15 +120,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       // Reset form if creating new transaction
       if (!transaction?.id) {
         setFormData({
-          date: new Date().toISOString().split("T")[0],
+          date: dayjs().format("YYYY-MM-DD"),
           description: "",
           category: "",
           merchant: "",
-          amount: 0,
+          amount: null,
           type: "Expense",
           paymentMethod: "Cash",
           notes: "",
         });
+        setIsFormValid(false);
       }
 
       setOpen(false);
@@ -257,7 +272,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 type="number"
                 step="0.01"
                 min="0"
-                value={formData.amount}
+                value={formData.amount === null ? "" : String(formData.amount)}
                 onChange={handleInputChange}
                 className="col-span-3"
                 placeholder="0.00"
@@ -313,7 +328,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !isFormValid}>
               {loading
                 ? "Saving..."
                 : transaction?.id
